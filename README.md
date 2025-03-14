@@ -1,0 +1,1 @@
+This is the study project for learning most common functionality of **FastAPI** framework.

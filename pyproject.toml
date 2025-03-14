@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "fastapi_eshop"
+version = "0.1.0"
+description = ""
+authors = ["Dmitry Samofalov <samdimus@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.8"
+uvicorn = {extras = ["standard"], version = "^0.34.0"}
+sqlalchemy = "^2.0.38"
+alembic = "^1.15.1"
+python-slugify = "^8.0.4"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.3.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
