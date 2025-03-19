@@ -2,5 +2,5 @@
 .vscode/
 .venv/
 .python-version
-*.pyc
+*.py[oc]
 __pycache__
