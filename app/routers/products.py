@@ -84,8 +84,8 @@ async def product_detail(db: Annotated[AsyncSession, Depends(get_db)], product_s
 @router.put('/{product_slug}')
 async def update_product(db: Annotated[AsyncSession, Depends(get_db)], product_slug: str,
                          update_product_model: CreateProduct):
-    update_product = await db.scalar(select(Product).where(Product.slug == product_slug))
-    if update_product is None:
+    renew_product = await db.scalar(select(Product).where(Product.slug == product_slug))
+    if renew_product is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='There is no product found'
@@ -98,13 +98,13 @@ async def update_product(db: Annotated[AsyncSession, Depends(get_db)], product_s
             detail='There is no category found'
         )
 
-    update_product.name = update_product_model.name,
-    update_product.description = update_product_model.description,
-    update_product.price = update_product_model.price,
-    update_product.image_url = update_product_model.image_url,
-    update_product.stock = update_product_model.stock,
-    update_product.category_id = update_product_model.category,
-    update_product.slug = slugify(update_product_model.name)
+    renew_product.name = update_product_model.name,
+    renew_product.description = update_product_model.description,
+    renew_product.price = update_product_model.price,
+    renew_product.image_url = update_product_model.image_url,
+    renew_product.stock = update_product_model.stock,
+    renew_product.category_id = update_product_model.category,
+    renew_product.slug = slugify(update_product_model.name)
 
     await db.commit()
 
