@@ -12,6 +12,8 @@ uvicorn = {extras = ["standard"], version = "^0.34.0"}
 sqlalchemy = "^2.0.38"
 alembic = "^1.15.1"
 python-slugify = "^8.0.4"
+flake8 = "^7.1.2"
+asyncpg = "^0.30.0"
 
 
 [tool.poetry.group.test.dependencies]
