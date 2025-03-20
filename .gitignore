@@ -1,6 +1,7 @@
 .idea/
 .vscode/
 .venv/
+.env
 .python-version
 *.py[oc]
 __pycache__
