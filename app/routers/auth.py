@@ -93,12 +93,12 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
-async def create_user(db: Annotated[AsyncSession, Depends(get_db)], create_user: CreateUser):
-    await db.execute(insert(User).values(first_name=create_user.first_name,
-                                         last_name=create_user.last_name,
-                                         username=create_user.username,
-                                         email=create_user.email,
-                                         hashed_password=bcrypt_context.hash(create_user.password),
+async def create_user(db: Annotated[AsyncSession, Depends(get_db)], create_user_model: CreateUser):
+    await db.execute(insert(User).values(first_name=create_user_model.first_name,
+                                         last_name=create_user_model.last_name,
+                                         username=create_user_model.username,
+                                         email=create_user_model.email,
+                                         hashed_password=bcrypt_context.hash(create_user_model.password),
                                          ))
     await db.commit()
     return {
