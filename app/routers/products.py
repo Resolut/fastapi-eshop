@@ -87,13 +87,14 @@ async def product_detail(db: Annotated[AsyncSession, Depends(get_db)], product_s
             status_code=status.HTTP_404_NOT_FOUND,
             detail='There is no product found'
         )
+
     return product
 
 
 @router.put('/{product_slug}')
 async def update_product(db: Annotated[AsyncSession, Depends(get_db)], product_slug: str,
                          update_product_model: CreateProduct, get_user: Annotated[dict, Depends(get_current_user)]):
-    renew_product = await check_user_permission(db, get_user, product_slug)
+    renew_product = await get_product_only_for_admin_or_supplier(db, get_user, product_slug)
 
     category = await db.scalar(select(Category).where(Category.id == update_product_model.category))
     if category is None:
@@ -121,7 +122,7 @@ async def update_product(db: Annotated[AsyncSession, Depends(get_db)], product_s
 @router.delete('/')
 async def delete_product(db: Annotated[AsyncSession, Depends(get_db)], product_slug: str,
                          get_user: Annotated[dict, Depends(get_current_user)]):
-    product = await check_user_permission(db, get_user, product_slug)
+    product = await get_product_only_for_admin_or_supplier(db, get_user, product_slug)
     product.is_active = False
     await db.commit()
 
@@ -131,8 +132,9 @@ async def delete_product(db: Annotated[AsyncSession, Depends(get_db)], product_s
     }
 
 
-async def check_user_permission(db: Annotated[AsyncSession, Depends(get_db)],
-                                get_user: Annotated[dict, Depends(get_current_user)], product_slug: str):
+async def get_product_only_for_admin_or_supplier(db: Annotated[AsyncSession, Depends(get_db)],
+                                                 get_user: Annotated[dict, Depends(get_current_user)],
+                                                 product_slug: str):
     if not (get_user.get('is_admin') or get_user.get('is_supplier')):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -151,4 +153,5 @@ async def check_user_permission(db: Annotated[AsyncSession, Depends(get_db)],
             status_code=status.HTTP_403_FORBIDDEN,
             detail='You are not authorized to use this method'
         )
+
     return target_product
