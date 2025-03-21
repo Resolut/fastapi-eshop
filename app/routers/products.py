@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.backend.db_depends import get_db
 from app.models import Product, Category
+from app.routers.auth import get_current_user
 from app.schemas import CreateProduct
 
 router = APIRouter(prefix='/products', tags=['products'])
@@ -28,7 +29,14 @@ async def all_products(db: Annotated[AsyncSession, Depends(get_db)]):
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
-async def create_product(db: Annotated[AsyncSession, Depends(get_db)], product: CreateProduct):
+async def create_product(db: Annotated[AsyncSession, Depends(get_db)], product: CreateProduct,
+                         get_user: Annotated[dict, Depends(get_current_user)]):
+    if not (get_user.get('is_admin') or get_user.get('is_supplier')):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='You are not authorized to use this method'
+        )
+
     category = await db.scalar(select(Category).where(Category.id == product.category))
     if category is None:
         raise HTTPException(
@@ -41,6 +49,7 @@ async def create_product(db: Annotated[AsyncSession, Depends(get_db)], product: 
                                             price=product.price,
                                             image_url=product.image_url,
                                             stock=product.stock,
+                                            supplier_id=get_user.get('id'),
                                             category_id=product.category,
                                             rating=0.0,
                                             slug=slugify(product.name)))
@@ -83,13 +92,8 @@ async def product_detail(db: Annotated[AsyncSession, Depends(get_db)], product_s
 
 @router.put('/{product_slug}')
 async def update_product(db: Annotated[AsyncSession, Depends(get_db)], product_slug: str,
-                         update_product_model: CreateProduct):
-    renew_product = await db.scalar(select(Product).where(Product.slug == product_slug))
-    if renew_product is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='There is no product found'
-        )
+                         update_product_model: CreateProduct, get_user: Annotated[dict, Depends(get_current_user)]):
+    renew_product = await check_user_permission(db, get_user, product_slug)
 
     category = await db.scalar(select(Category).where(Category.id == update_product_model.category))
     if category is None:
@@ -115,15 +119,9 @@ async def update_product(db: Annotated[AsyncSession, Depends(get_db)], product_s
 
 
 @router.delete('/')
-async def delete_product(db: Annotated[AsyncSession, Depends(get_db)], product_slug: str):
-    product = await db.scalar(select(Product).where(Product.slug == product_slug))
-
-    if product is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='There is no product found'
-        )
-
+async def delete_product(db: Annotated[AsyncSession, Depends(get_db)], product_slug: str,
+                         get_user: Annotated[dict, Depends(get_current_user)]):
+    product = await check_user_permission(db, get_user, product_slug)
     product.is_active = False
     await db.commit()
 
@@ -131,3 +129,26 @@ async def delete_product(db: Annotated[AsyncSession, Depends(get_db)], product_s
         'status_code': status.HTTP_200_OK,
         'transaction': 'Product delete is successful',
     }
+
+
+async def check_user_permission(db: Annotated[AsyncSession, Depends(get_db)],
+                                get_user: Annotated[dict, Depends(get_current_user)], product_slug: str):
+    if not (get_user.get('is_admin') or get_user.get('is_supplier')):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='You are not authorized to use this method'
+        )
+
+    target_product = await db.scalar(select(Product).where(Product.slug == product_slug))
+    if target_product is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='There is no product found'
+        )
+
+    if not (get_user.get('id') == target_product.id or get_user.get('is_admin')):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='You are not authorized to use this method'
+        )
+    return target_product
