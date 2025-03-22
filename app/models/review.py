@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
@@ -13,7 +13,7 @@ class Review(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     comment = Column(String, nullable=True)
-    comment_date = Column(DateTime, default=datetime.utcnow)
+    comment_date = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
     grade = Column(Integer, nullable=False)
     is_active = Column(Boolean, default=True)
 
