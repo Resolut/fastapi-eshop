@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 
 class CreateProduct(BaseModel):
@@ -26,4 +28,5 @@ class CreateReview(BaseModel):
     user_id: int
     product_id: int
     comment: str
-    grade: int
+    comment_date: datetime = Field(default_factory=datetime.now)
+    grade: int = Field(..., ge=1, le=5)
